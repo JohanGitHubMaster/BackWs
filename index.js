@@ -6,7 +6,8 @@ let vOrderToTreat = require('./routes/VOrderToTreats');
 
 let mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
-const uri = "mongodb://localhost:27017/DBWebselect?retryWrites=true&w=majority";
+
+const uri = "mongodb://0.0.0.0:27017/DBWebselect?retryWrites=true&w=majority";
 const options = {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -43,6 +44,13 @@ app.route(prefix + '/vweborders')
   //VorderToTreat
 app.route(prefix + '/vOrderToTreat')
   .get(vOrderToTreat.getVOrderToTreat)
+  
+app.route(prefix + '/vOrderToTreatLimit')
+  .get(vOrderToTreat.getVOrderToTreatLimit)
+
+  app.route(prefix + '/vOrderToTreattest')
+  .get(vOrderToTreat.getVOrderToTreattest)
+  
   
 
 // On démarre le serveur

@@ -5,6 +5,7 @@ var aggregatePaginate = require("mongoose-aggregate-paginate-v2");
 let VOrderToTreatSchema = Schema({
     ASd : Object,
     VW : Object,
+    WebPriority : Number,
     Location: String,
     Origine: String
 },{ collection: 'VOrderToTreat'});
