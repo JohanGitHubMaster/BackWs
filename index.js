@@ -50,6 +50,9 @@ app.route(prefix + '/vOrderToTreatLimit')
 
   app.route(prefix + '/vOrderToTreattest')
   .get(vOrderToTreat.getVOrderToTreattest)
+
+  app.route(prefix + '/orderToTreat')
+  .get(vOrderToTreat.getOrderToTreat)
   
   
 

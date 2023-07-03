@@ -1,4 +1,10 @@
 var VOrderToTreat =  require('../model/VOrderToTreat');
+var ArticleSelected = require('../model/ArticleSelected');
+var OrderSetting = require('../model/OrderSetting');
+const VWebOrders = require('../model/VWebOrders');
+const MapLocation = require('../model/MapLocation');
+const MapFlow = require('../model/MapFlow');
+
 function getVOrderToTreat(req, res) {
      var aggregateQuery = VOrderToTreat.find().limit(10);
     
@@ -66,8 +72,81 @@ function getVOrderToTreat(req, res) {
   
    }
 
+   // Récupérer tous les assignments (GET)
 
-   function getVOrderToTreattest(req, res) {
+ 
+
+
+   async function getOrderToTreat(req, res) {
+    try {
+
+      const page = parseInt(req.query.page) || 0;
+      const limit = parseInt(req.query.limit) || 10;
+      const orderId = parseInt(req.query.orderId) || undefined;
+
+      const customerId = parseInt(req.query.customerId) || undefined;
+      const article = await ArticleSelected.find({}, { OrderId: 1, ArticleSelectedId: 1 }).sort({ OrderId: 1 }).exec();
+      var vweborder = [];
+
+      if(orderId != null && orderId!= undefined){
+        vweborder = await VWebOrders.find({OrderId:orderId}, { OrderId: 1, OrderName: 1, Active : 1, Customer : 1, CustomerId:1 }).sort({ OrderId: 1 }).exec();
+      }
+      else if(customerId!= null && customerId!= undefined){
+        vweborder = await VWebOrders.find({CustomerId:customerId}, { OrderId: 1, OrderName: 1, Active : 1, Customer : 1, CustomerId:1 }).sort({ OrderId: 1 }).exec();
+      }     
+      else
+        vweborder = await VWebOrders.find({CustomerId:10001774}, { OrderId: 1, OrderName: 1, Active : 1, Customer : 1, CustomerId:1 }).sort({ OrderId: 1 }).exec();
+
+        console.log(orderId)
+        console.log(customerId)
+        console.log(vweborder)
+      
+      const orderSetting = await OrderSetting.find({}, { Orderid: 1,MapLocationId:1,MapFlowId:1 ,WebPriority : 1 }).exec();
+      const mapLocation = await MapLocation.find({}, { DescFrench: 1, MapLocationId:1  }).exec();
+      const mapFlow = await MapFlow.find({}, { DescFrench: 1, MapFlowId:1 }).exec();
+      
+      const vweborderLookup = vweborder.reduce((lookup, vweborderItem) => {
+        lookup[vweborderItem.OrderId] = vweborderItem;
+        return lookup;
+      }, {});
+      
+      const mapLocationLookup = mapLocation.reduce((lookup, mapLocationSettingItem) => {
+        lookup[mapLocationSettingItem.MapLocationId] = mapLocationSettingItem;
+        return lookup;
+      }, {});
+
+      const mapFlowLookup = mapFlow.reduce((lookup, mapFlowSettingItem) => {
+        lookup[mapFlowSettingItem.MapFlowId] = mapFlowSettingItem;
+        return lookup;
+      }, {});
+
+      const orderSettingLookup = orderSetting.reduce((lookup, orderSettingItem) => {
+        lookup[orderSettingItem.Orderid] = orderSettingItem;
+        return lookup;
+      }, {});
+  
+      const joinedResult = article.map((articleItem) => ({
+        ...articleItem._doc,
+        OrderName: vweborderLookup[articleItem.OrderId]?.OrderName || null,
+        Customer: vweborderLookup[articleItem.OrderId]?.Customer || null,
+        CustomerId: vweborderLookup[articleItem.OrderId]?.CustomerId || null,
+        Active:vweborderLookup[articleItem.OrderId]?.Active || null,
+        WebPriority : orderSettingLookup[articleItem.OrderId]?.WebPriority || null,             
+        maplocation : mapLocationLookup[orderSettingLookup[articleItem.OrderId]?.MapLocationId]?.DescFrench || null,
+        maplocationId : mapLocationLookup[orderSettingLookup[articleItem.OrderId]?.MapLocationId]?.MapLocationId || null,
+        mapFlow : mapFlowLookup[orderSettingLookup[articleItem.OrderId]?.MapFlowId]?.DescFrench || null,
+        MapFlowId : mapFlowLookup[orderSettingLookup[articleItem.OrderId]?.MapFlowId]?.MapFlowId || null,
+      }));
+      
+      const arrayUniqueByKey = [...new Map(joinedResult.map(item => [item['CustomerId'], item])).values()];
+      console.log(arrayUniqueByKey.length)
+      res.send(arrayUniqueByKey.filter(x=>x.OrderName != null).slice(page,limit+page));
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Internal Server Error');
+    }
+  }
+  function getVOrderToTreattest(req, res) {
 
     const options = {
       page: 1,       // Current page number (default: 1)
@@ -89,8 +168,4 @@ function getVOrderToTreat(req, res) {
     });
   }
 
-   
-  
-  
-   
-   module.exports = { getVOrderToTreat,getVOrderToTreatLimit,getVOrderToTreattest }
+  module.exports = { getVOrderToTreat,getVOrderToTreatLimit,getVOrderToTreattest,getOrderToTreat }
