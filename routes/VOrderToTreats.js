@@ -95,11 +95,11 @@ function getVOrderToTreat(req, res) {
         vweborder = await VWebOrders.find({CustomerId:customerId}, { OrderId: 1, OrderName: 1, Active : 1, Customer : 1, CustomerId:1 }).sort({ OrderId: 1 }).exec();
       }     
       else
-        vweborder = await VWebOrders.find({CustomerId:10001774}, { OrderId: 1, OrderName: 1, Active : 1, Customer : 1, CustomerId:1 }).sort({ OrderId: 1 }).exec();
+        vweborder = await VWebOrders.find({}, { OrderId: 1, OrderName: 1, Active : 1, Customer : 1, CustomerId:1 }).sort({ OrderId: 1 }).exec();
 
         console.log(orderId)
         console.log(customerId)
-        console.log(vweborder)
+       // console.log(vweborder)
       
       const orderSetting = await OrderSetting.find({}, { Orderid: 1,MapLocationId:1,MapFlowId:1 ,WebPriority : 1 }).exec();
       const mapLocation = await MapLocation.find({}, { DescFrench: 1, MapLocationId:1  }).exec();
@@ -137,8 +137,8 @@ function getVOrderToTreat(req, res) {
         mapFlow : mapFlowLookup[orderSettingLookup[articleItem.OrderId]?.MapFlowId]?.DescFrench || null,
         MapFlowId : mapFlowLookup[orderSettingLookup[articleItem.OrderId]?.MapFlowId]?.MapFlowId || null,
       }));
-      
-      const arrayUniqueByKey = [...new Map(joinedResult.map(item => [item['CustomerId'], item])).values()];
+      // console.log(joinedResult)
+      const arrayUniqueByKey = [...new Map(joinedResult.map(item => [item['OrderId'], item])).values()];
       console.log(arrayUniqueByKey.length)
       res.send(arrayUniqueByKey.filter(x=>x.OrderName != null).slice(page,limit+page));
     } catch (err) {
