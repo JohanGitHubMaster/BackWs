@@ -3,6 +3,8 @@ let app = express();
 let port = process.env.PORT || 8010;
 let vweborder = require('./routes/VWebOrders');
 let vOrderToTreat = require('./routes/VOrderToTreats');
+let mapLocation = require('./routes/MapLocation');
+let mapFlow = require('./routes/MapFlow');
 
 let mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
@@ -54,6 +56,11 @@ app.route(prefix + '/vOrderToTreatLimit')
   app.route(prefix + '/orderToTreat')
   .get(vOrderToTreat.getOrderToTreat)
   
+  app.route(prefix + '/mapLocation')
+  .get(mapLocation.getMapLocation)
+
+  app.route(prefix + '/mapFlow')
+  .get(mapFlow.getMapFlow)
   
 
 // On démarre le serveur

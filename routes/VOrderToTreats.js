@@ -83,10 +83,18 @@ function getVOrderToTreat(req, res) {
       const page = parseInt(req.query.page) || 0;
       const limit = parseInt(req.query.limit) || 10;
       const orderId = parseInt(req.query.orderId) || undefined;
-
       const customerId = parseInt(req.query.customerId) || undefined;
+      
+
+      const location = req.query.location || "all";
+      const flow = req.query.flow || "all";
+      const priority = parseInt(req.query.priority) || undefined;
+
       const article = await ArticleSelected.find({}, { OrderId: 1, ArticleSelectedId: 1 }).sort({ OrderId: 1 }).exec();
       var vweborder = [];
+      var mapLocation = [];
+      var mapFlow = [];
+      var orderSetting = [];
 
       if(orderId != null && orderId!= undefined){
         vweborder = await VWebOrders.find({OrderId:orderId}, { OrderId: 1, OrderName: 1, Active : 1, Customer : 1, CustomerId:1 }).sort({ OrderId: 1 }).exec();
@@ -99,11 +107,22 @@ function getVOrderToTreat(req, res) {
 
         console.log(orderId)
         console.log(customerId)
-       // console.log(vweborder)
+        //console.log(vweborder)
+        if(priority != null && priority!= undefined){
+          orderSetting = await OrderSetting.find({WebPriority:priority}, { Orderid: 1,MapLocationId:1,MapFlowId:1 ,WebPriority : 1 }).exec();
+      }
+      else
+       orderSetting = await OrderSetting.find({}, { Orderid: 1,MapLocationId:1,MapFlowId:1 ,WebPriority : 1 }).exec();
+
+      if(location != "all")
+       mapLocation = await MapLocation.find({DescFrench:location}, { DescFrench: 1, MapLocationId:1  }).exec();
+      else
+        mapLocation = await MapLocation.find({}, { DescFrench: 1, MapLocationId:1  }).exec();
       
-      const orderSetting = await OrderSetting.find({}, { Orderid: 1,MapLocationId:1,MapFlowId:1 ,WebPriority : 1 }).exec();
-      const mapLocation = await MapLocation.find({}, { DescFrench: 1, MapLocationId:1  }).exec();
-      const mapFlow = await MapFlow.find({}, { DescFrench: 1, MapFlowId:1 }).exec();
+      if(flow != "all")
+        mapFlow = await MapFlow.find({DescFrench:flow}, { DescFrench: 1, MapFlowId:1 }).exec();
+      else
+        mapFlow = await MapFlow.find({}, { DescFrench: 1, MapFlowId:1 }).exec();
       
       const vweborderLookup = vweborder.reduce((lookup, vweborderItem) => {
         lookup[vweborderItem.OrderId] = vweborderItem;
@@ -135,12 +154,17 @@ function getVOrderToTreat(req, res) {
         maplocation : mapLocationLookup[orderSettingLookup[articleItem.OrderId]?.MapLocationId]?.DescFrench || null,
         maplocationId : mapLocationLookup[orderSettingLookup[articleItem.OrderId]?.MapLocationId]?.MapLocationId || null,
         mapFlow : mapFlowLookup[orderSettingLookup[articleItem.OrderId]?.MapFlowId]?.DescFrench || null,
-        MapFlowId : mapFlowLookup[orderSettingLookup[articleItem.OrderId]?.MapFlowId]?.MapFlowId || null,
+        MapFlowId : mapFlowLookup[orderSettingLookup[articleItem.OrderId]?.MapFlowId]?.MapFlowId || null,       
       }));
       // console.log(joinedResult)
-      const arrayUniqueByKey = [...new Map(joinedResult.map(item => [item['OrderId'], item])).values()];
+      console.log(location)
+      const arrayUniqueByKey = [...new Map(joinedResult.filter(x=>x.OrderName != null && x.Active && x.maplocation != null && x.mapFlow != null && x.WebPriority !=null).map(item => [item['OrderId'], item])).values()];
+      // console.log(arrayUniqueByKey[1].maplocation)
       console.log(arrayUniqueByKey.length)
-      res.send(arrayUniqueByKey.filter(x=>x.OrderName != null).slice(page,limit+page));
+
+      // res.send(arrayUniqueByKey.filter(x=>x.OrderName != null).slice(page,limit+page));
+
+      res.send('{"Length" :'+arrayUniqueByKey.length+',"result":'+ JSON.stringify(arrayUniqueByKey.filter(x=>x.OrderName != null && x.Active).slice(page,limit+page)) +'}');
     } catch (err) {
       console.error(err);
       res.status(500).send('Internal Server Error');
