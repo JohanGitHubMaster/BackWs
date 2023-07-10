@@ -4,6 +4,9 @@ var OrderSetting = require('../model/OrderSetting');
 const VWebOrders = require('../model/VWebOrders');
 const MapLocation = require('../model/MapLocation');
 const MapFlow = require('../model/MapFlow');
+const VArticleToValidate = require('../model/VArticleToValidate');
+const VArticleToValidateSource = require('../model/VArticleToValidateSource');
+
 
 function getVOrderToTreat(req, res) {
      var aggregateQuery = VOrderToTreat.find().limit(10);
@@ -22,6 +25,20 @@ function getVOrderToTreat(req, res) {
         }      
       }
     );
+   }
+
+   async function getOrderToTreatSkipLimit(req, res){
+    try{
+       
+       var limit = parseInt(req.query.limit) || 10 
+       var page = parseInt(req.query.page*limit) || 0 
+      var result = await VOrderToTreat.find({}).limit(limit).skip(page).exec();
+      res.send(result)
+    }
+    catch(error){
+      res.send(error)
+    }
+    
    }
 
 
@@ -81,7 +98,7 @@ function getVOrderToTreat(req, res) {
     try {
 
       const page = parseInt(req.query.page) || 0;
-      const limit = parseInt(req.query.limit) || 10;
+      const limit = parseInt(req.query.limit) || 30;
       const orderId = parseInt(req.query.orderId) || undefined;
       const customerId = parseInt(req.query.customerId) || undefined;
       
@@ -90,24 +107,73 @@ function getVOrderToTreat(req, res) {
       const flow = req.query.flow || "all";
       const priority = parseInt(req.query.priority) || undefined;
 
-      const article = await ArticleSelected.find({}, { OrderId: 1, ArticleSelectedId: 1 }).sort({ OrderId: 1 }).exec();
+      // const article = await ArticleSelected.aggregate([
+      //   {
+      //     $sort: { OrderId: 1 }
+      //   },
+      //   {
+      //     $group: {
+      //       _id: { OrderId: "$OrderId" },
+      //       // OrderId: { $first: "$OrderId" },
+      //       // ArticleSelectedId: { $first: "$ArticleSelectedId" }
+      //     }
+      //   },
+      //   {
+      //     $limit: 10
+      //   }
+      // ], { allowDiskUse: true }).exec();
+
+      // const article = await ArticleSelected.distinct("OrderId").limit(10).exec();
+
+      const article = await ArticleSelected.aggregate([
+        { $group: { _id: "$OrderId" } },
+        { $sort: { _id: 1 } },
+        { $limit: 30 },
+        { $project: { _id: 0, OrderId: "$_id" } }
+      ]).exec();
+
+      // const orderIds = await VWebOrders.aggregate([
+        
+      //   { $group: { _id: "$OrderId" } },
+      //   { $project: { _id: 0, OrderId: "$_id" } }
+      // ]).exec();
+      
+      // const matchingArticles = await ArticleSelected.find({ OrderId: { $in: orderIds.map(o => o.OrderId) } }).exec();
+      console.log(article)        
+
+      // const article = await ArticleSelected.find({}, { OrderId: 1, ArticleSelectedId: 1 }).sort({ OrderId: 1 }).limit(10).exec();
       var vweborder = [];
       var mapLocation = [];
       var mapFlow = [];
       var orderSetting = [];
-
+      // console.log(distinctOrderIds)
       if(orderId != null && orderId!= undefined){
         vweborder = await VWebOrders.find({OrderId:orderId}, { OrderId: 1, OrderName: 1, Active : 1, Customer : 1, CustomerId:1 }).sort({ OrderId: 1 }).exec();
       }
       else if(customerId!= null && customerId!= undefined){
         vweborder = await VWebOrders.find({CustomerId:customerId}, { OrderId: 1, OrderName: 1, Active : 1, Customer : 1, CustomerId:1 }).sort({ OrderId: 1 }).exec();
       }     
-      else
-        vweborder = await VWebOrders.find({}, { OrderId: 1, OrderName: 1, Active : 1, Customer : 1, CustomerId:1 }).sort({ OrderId: 1 }).exec();
+      else{
+        vweborder = await VWebOrders.aggregate([
+          { $group: { _id: "$OrderId", OrderName: { $first: "$OrderName" }, Active: { $first: "$Active" }, Customer: { $first: "$Customer" }, CustomerId: { $first: "$CustomerId" } } },
+          { $sort: { _id: 1 } },
+          { $limit: 30 },
+          { $project: { _id: 0, OrderId: "$_id", OrderName: 1, Active: 1, Customer: 1, CustomerId: 1 } }
+        ]).exec();
+      }
+        // vweborder = await VWebOrders.find({}, { OrderId: 1, OrderName: 1, Active : 1, Customer : 1, CustomerId:1 }).sort({ OrderId: 1 }).exec();
 
         console.log(orderId)
         console.log(customerId)
-        //console.log(vweborder)
+
+        // const vweborder = await VWebOrders.aggregate([
+        //   { $group: { _id: "$OrderId", OrderName: { $first: "$OrderName" }, Active: { $first: "$Active" }, Customer: { $first: "$Customer" }, CustomerId: { $first: "$CustomerId" } } },
+        //   { $sort: { _id: 1 } },
+        //   { $limit: 10 },
+        //   { $project: { _id: 0, OrderId: "$_id", OrderName: 1, Active: 1, Customer: 1, CustomerId: 1 } }
+        // ]).exec();
+
+        // console.log(vweborder)
         if(priority != null && priority!= undefined){
           orderSetting = await OrderSetting.find({WebPriority:priority}, { Orderid: 1,MapLocationId:1,MapFlowId:1 ,WebPriority : 1 }).exec();
       }
@@ -128,6 +194,8 @@ function getVOrderToTreat(req, res) {
         lookup[vweborderItem.OrderId] = vweborderItem;
         return lookup;
       }, {});
+
+      // console.log(vweborderLookup)
       
       const mapLocationLookup = mapLocation.reduce((lookup, mapLocationSettingItem) => {
         lookup[mapLocationSettingItem.MapLocationId] = mapLocationSettingItem;
@@ -146,6 +214,7 @@ function getVOrderToTreat(req, res) {
   
       const joinedResult = article.map((articleItem) => ({
         ...articleItem._doc,
+        OrderId:vweborderLookup[articleItem.OrderId]?.OrderId || null,
         OrderName: vweborderLookup[articleItem.OrderId]?.OrderName || null,
         Customer: vweborderLookup[articleItem.OrderId]?.Customer || null,
         CustomerId: vweborderLookup[articleItem.OrderId]?.CustomerId || null,
@@ -156,11 +225,12 @@ function getVOrderToTreat(req, res) {
         mapFlow : mapFlowLookup[orderSettingLookup[articleItem.OrderId]?.MapFlowId]?.DescFrench || null,
         MapFlowId : mapFlowLookup[orderSettingLookup[articleItem.OrderId]?.MapFlowId]?.MapFlowId || null,       
       }));
-      // console.log(joinedResult)
+      console.log(joinedResult)
       console.log(location)
-      const arrayUniqueByKey = [...new Map(joinedResult.filter(x=>x.OrderName != null && x.Active && x.maplocation != null && x.mapFlow != null && x.WebPriority !=null).map(item => [item['OrderId'], item])).values()];
+      const arrayUniqueByKey = joinedResult;
+      //const arrayUniqueByKey = [...new Map(joinedResult.filter(x=>x.OrderName != null && x.Active && x.maplocation != null && x.mapFlow != null && x.WebPriority !=null).map(item => [item['OrderId'], item])).values()];
       // console.log(arrayUniqueByKey[1].maplocation)
-      console.log(arrayUniqueByKey.length)
+      //console.log(arrayUniqueByKey.length)
 
       // res.send(arrayUniqueByKey.filter(x=>x.OrderName != null).slice(page,limit+page));
 
@@ -192,4 +262,33 @@ function getVOrderToTreat(req, res) {
     });
   }
 
-  module.exports = { getVOrderToTreat,getVOrderToTreatLimit,getVOrderToTreattest,getOrderToTreat }
+  async function getVArticleToValidate(req, res) {
+    try{
+      var limit = parseInt(req.query.limit) || 10 
+      var page = parseInt(req.query.page*limit) || 0 
+      var orderid = parseInt(req.query.OrderId) || 25366
+      var result = await VArticleToValidate.find({OrderId:orderid}).limit(limit).skip(page).exec();
+      res.send(result);
+    }
+    catch(error){
+      res.send(error);
+    }  
+  }
+
+  async function getVArticleToValidateSource(req, res) {
+    try{
+      var limit = parseInt(req.query.limit) || 10 
+      var page = parseInt(req.query.page*limit) || 0 
+      var sourceId = parseInt(req.query.SourceId) || 19861920
+      var result = await VArticleToValidateSource.find({SourceId:sourceId}).limit(limit).skip(page).exec();
+      res.send(result);
+    }
+    catch(error){
+      res.send(error);
+    }  
+  }
+
+  
+  
+
+  module.exports = { getVOrderToTreat,getVOrderToTreatLimit,getVOrderToTreattest,getOrderToTreat,getOrderToTreatSkipLimit,getVArticleToValidate,getVArticleToValidateSource }

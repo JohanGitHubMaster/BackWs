@@ -12,4 +12,3 @@ let VOrderToTreatSchema = Schema({
 
 VOrderToTreatSchema.plugin(aggregatePaginate);
 module.exports = mongoose.model('VOrderToTreat', VOrderToTreatSchema);
-

@@ -45,7 +45,8 @@ app.route(prefix + '/vweborders')
 
   //VorderToTreat
 app.route(prefix + '/vOrderToTreat')
-  .get(vOrderToTreat.getVOrderToTreat)
+  // .get(vOrderToTreat.getVOrderToTreat)
+  .get(vOrderToTreat.getOrderToTreatSkipLimit)
   
 app.route(prefix + '/vOrderToTreatLimit')
   .get(vOrderToTreat.getVOrderToTreatLimit)
@@ -55,6 +56,12 @@ app.route(prefix + '/vOrderToTreatLimit')
 
   app.route(prefix + '/orderToTreat')
   .get(vOrderToTreat.getOrderToTreat)
+
+  app.route(prefix + '/vArticleToValidate')
+  .get(vOrderToTreat.getVArticleToValidate)
+
+  app.route(prefix + '/vArticleToValidateBysource')
+  .get(vOrderToTreat.getVArticleToValidateSource)
   
   app.route(prefix + '/mapLocation')
   .get(mapLocation.getMapLocation)
