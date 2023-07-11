@@ -5,6 +5,8 @@ let vweborder = require('./routes/VWebOrders');
 let vOrderToTreat = require('./routes/VOrderToTreats');
 let mapLocation = require('./routes/MapLocation');
 let mapFlow = require('./routes/MapFlow');
+let vkeywordDescription = require('./routes/VKeywordDescription');
+let keywordGeneral = require('./routes/KeywordGeneral');
 
 let mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
@@ -68,6 +70,12 @@ app.route(prefix + '/vOrderToTreatLimit')
 
   app.route(prefix + '/mapFlow')
   .get(mapFlow.getMapFlow)
+
+  app.route(prefix + '/vkeywordDescription')
+  .get(vkeywordDescription.getVkeywordDescription)
+
+  app.route(prefix + '/keywordGeneral')
+  .get(keywordGeneral.getKeywordGeneral)
   
 
 // On démarre le serveur
