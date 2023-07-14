@@ -45,6 +45,10 @@ app.route(prefix + '/')
 app.route(prefix + '/vweborders')
   .get(vweborder.getVWebOrders)
 
+app.route(prefix + '/vwebordersbyid')
+.get(vweborder.getWebOrderById)
+  
+
   //VorderToTreat
 app.route(prefix + '/vOrderToTreat')
   // .get(vOrderToTreat.getVOrderToTreat)

@@ -18,4 +18,15 @@ function getVWebOrders(req, res) {
     );
    }
 
-   module.exports = { getVWebOrders }
+   async function getWebOrderById(req, res) {
+    try{
+      var OrderId = parseInt(req.query.OrderId)
+      var result = await VWebOrder.findOne({OrderId:OrderId}).exec();
+      res.send(result);
+    }
+    catch(error){
+      res.send(error);
+    }  
+  }
+
+   module.exports = { getVWebOrders,getWebOrderById }

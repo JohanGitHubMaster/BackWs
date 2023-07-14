@@ -32,7 +32,25 @@ function getVOrderToTreat(req, res) {
        
        var limit = parseInt(req.query.limit) || 10 
        var page = parseInt(req.query.page*limit) || 0 
-      var result = await VOrderToTreat.find({}).limit(limit).skip(page).exec();
+       var orderid = parseInt(req.query.OrderId) || "$OrderId"; 
+       var CustomerId = parseInt(req.query.CustomerId) || "$CustomerId"; 
+       var WebPriority = parseInt(req.query.WebPriority) || "$WebPriority";
+       var location = req.query.location || "$maplocation";
+       var flow = req.query.mapflow || "$mapflow";
+
+       console.log(WebPriority)
+
+      var result = await VOrderToTreat.find({
+        $expr: {
+          $and: [
+            { $eq: ["$WebPriority", WebPriority] },
+            { $eq: ["$CustomerId", CustomerId] },
+            { $eq: ["$OrderId", orderid] },
+            { $eq: ["$maplocation", location] },
+            { $eq: ["$mapflow", flow] }
+          ]
+        }
+      }).limit(limit).skip(page).exec();
       res.send(result)
     }
     catch(error){
