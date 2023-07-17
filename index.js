@@ -7,6 +7,8 @@ let mapLocation = require('./routes/MapLocation');
 let mapFlow = require('./routes/MapFlow');
 let vkeywordDescription = require('./routes/VKeywordDescription');
 let keywordGeneral = require('./routes/KeywordGeneral');
+let keyWordArticle = require('./routes/KeyWordArticle');
+var ArticleKeyword =  require('./routes/ArticleKeyword');
 
 let mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
@@ -80,6 +82,13 @@ app.route(prefix + '/vOrderToTreatLimit')
 
   app.route(prefix + '/keywordGeneral')
   .get(keywordGeneral.getKeywordGeneral)
+
+  app.route(prefix + '/keywordArticle')
+  .get(keyWordArticle.getKeywordArticle)
+
+  app.route(prefix + '/ArticleKeyword')
+  .get(ArticleKeyword.getArticleKeyword)
+  
   
 
 // On démarre le serveur
