@@ -285,7 +285,9 @@ function getVOrderToTreat(req, res) {
       var limit = parseInt(req.query.limit) || 10 
       var page = parseInt(req.query.page*limit) || 0 
       var orderid = parseInt(req.query.OrderId) || 25366
+      // var result = await VArticleToValidate.find({OrderId:orderid,ToTreat:true}).limit(limit).skip(page).exec();
       var result = await VArticleToValidate.find({OrderId:orderid}).limit(limit).skip(page).exec();
+
       res.send(result);
     }
     catch(error){
@@ -298,7 +300,9 @@ function getVOrderToTreat(req, res) {
       var limit = parseInt(req.query.limit) || 10 
       var page = parseInt(req.query.page*limit) || 0 
       var sourceId = parseInt(req.query.SourceId) || 19861920
+      // var result = await VArticleToValidateSource.find({SourceId:sourceId,ToTreat:true}).limit(limit).skip(page).exec();
       var result = await VArticleToValidateSource.find({SourceId:sourceId}).limit(limit).skip(page).exec();
+
       res.send(result);
     }
     catch(error){

@@ -9,7 +9,7 @@ let vkeywordDescription = require('./routes/VKeywordDescription');
 let keywordGeneral = require('./routes/KeywordGeneral');
 let keyWordArticle = require('./routes/KeyWordArticle');
 var ArticleKeyword =  require('./routes/ArticleKeyword');
-
+let KeywordDescription = require('./routes/KeywordDescription');
 let mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
@@ -89,6 +89,8 @@ app.route(prefix + '/vOrderToTreatLimit')
   app.route(prefix + '/ArticleKeyword')
   .get(ArticleKeyword.getArticleKeyword)
   
+  app.route(prefix + '/KeywordDescription')
+  .get(KeywordDescription.getKeywordDescription)
   
 
 // On démarre le serveur
