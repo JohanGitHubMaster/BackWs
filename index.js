@@ -10,6 +10,8 @@ let keywordGeneral = require('./routes/KeywordGeneral');
 let keyWordArticle = require('./routes/KeyWordArticle');
 var ArticleKeyword =  require('./routes/ArticleKeyword');
 let KeywordDescription = require('./routes/KeywordDescription');
+let ArticleSelected = require('./routes/ArticleSelected');
+
 let mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
@@ -92,7 +94,9 @@ app.route(prefix + '/vOrderToTreatLimit')
   app.route(prefix + '/KeywordDescription')
   .get(KeywordDescription.getKeywordDescription)
   
-
+  app.route(prefix + '/UpdateArticle')
+  .get(ArticleSelected.UpdateArticleSelected)
+  
 // On démarre le serveur
 app.listen(port, "0.0.0.0");
 console.log('Serveur démarré sur http://localhost:' + port);
